@@ -39,6 +39,19 @@ const resolvers = {
                 users.push(newUser);
                 return newUser;
             }
+        },
+        deleteUser: (parent, args, context, info) => {
+            let user;
+
+            users.findIndex((elem) => {
+                if(elem.id == args.userId){
+                    user = elem;
+                    return true;
+                }
+                return false; // passes test so stays in array.
+            })
+
+            return user;
         }
     },
     User: {
