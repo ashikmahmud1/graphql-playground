@@ -8,11 +8,15 @@ type Query {
     user(userId: ID!): User
 }
 
+type Mutation {
+    createUser(id: ID!, firstName: String!, email: String!, age: Int): User!
+}
+
 type User {
     id: ID!
     firstName: String!
     email: String!
-    age: Int!
+    age: Int
 }
 `;
 
@@ -47,6 +51,18 @@ const resolvers = {
                     return user;
                 }
             })
+        }
+    },
+    Mutation: {
+        createUser: (parent, args, context, info) => {
+            const newUser = {
+                id: args.id,
+                firstName: args.firstName,
+                email: args.email,
+                age: args.age
+            }
+            users.push(newUser);
+            return newUser;
         }
     },
     User: {
