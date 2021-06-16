@@ -9,7 +9,7 @@ type Query {
 }
 
 type Mutation {
-    createUser(id: ID!, firstName: String!, email: String!, age: Int): User!
+    createUser(firstName: String!, email: String!, age: Int): User!
 }
 
 type User {
@@ -19,6 +19,17 @@ type User {
     age: Int
 }
 `;
+
+function createUserId() {
+    let id = 0;
+    function incrementId(){
+        id++;
+        return id;
+    }
+    return incrementId;
+}
+
+const newUserId = createUserId();
 
 let users = [
     {
@@ -56,7 +67,7 @@ const resolvers = {
     Mutation: {
         createUser: (parent, args, context, info) => {
             const newUser = {
-                id: args.id,
+                id: newUserId(),
                 firstName: args.firstName,
                 email: args.email,
                 age: args.age
