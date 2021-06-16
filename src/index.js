@@ -5,6 +5,7 @@ const typeDefs = `
 type Query {
     helloworld: String!,
     users: [User!]!
+    user(userId: ID!): User
 }
 
 type User {
@@ -35,6 +36,14 @@ const resolvers = {
         helloworld: () => 'hello world! what a day!',
         users: (parent, args, context, info) => {
             return users;
+        },
+        user: (parent, args, context, info) => {
+            console.log(args);
+            return users.find((user) => {
+                if(user.id == args.userId){
+                    return user;
+                }
+            })
         }
     },
     User: {
