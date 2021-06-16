@@ -61,8 +61,15 @@ const resolvers = {
                 email: args.email,
                 age: args.age
             }
-            users.push(newUser);
-            return newUser;
+            const userAlreadyExist = users.some((elem) => {
+                return elem.email == args.email
+            })
+            if(userAlreadyExist){
+                throw new Error("User already exists")
+            } else{
+                users.push(newUser);
+                return newUser;
+            }
         }
     },
     User: {
