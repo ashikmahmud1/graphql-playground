@@ -9,6 +9,8 @@ type Mutation {
     createUser(firstName: String!, email: String!, age: Int): User!
     deleteUser(userId: ID!): User
     updateUser(userId: ID!,input: UserInput): User
+    createTodo(name: String!, isComplete:Boolean!): Todo!
+    deleteTodo(todoId: ID!): Todo
 }
 
 input UserInput {
@@ -29,6 +31,4 @@ type Todo {
     id: ID!
     name: String!
     isComplete: Boolean!
-    userId: String!
-    user: User!
 }
