@@ -10,8 +10,10 @@ type Mutation {
     deleteUser(userId: ID!): User
     updateUser(userId: ID!,input: UserInput): User
     createTodo(name: String!, isComplete:Boolean!): Todo!
+    updateTodo(todoId:ID!, name: String, isComplete:Boolean): Todo
+    resetTodos(todoIds: [ID!]!): BatchPayload!
     deleteTodo(todoId: ID!): Todo
-    deleteTodos(todoIds: [ID!]!): BatchPayload
+    deleteTodos(todoIds: [ID!]!): BatchPayload!
 }
 
 

@@ -108,6 +108,32 @@ const resolvers = {
         },
       });
     },
+    updateTodo: (parent, args, context, info) => {
+      return context.prisma.todo.update({
+        where: {
+          id: parseInt(args.todoId),
+        },
+        data: {
+          name: args.name,
+          isComplete: args.isComplete,
+        },
+      });
+    },
+    resetTodos: (parent, args, context, info) => {
+      let todosToReset = args.todoIds.map((id) => {
+        return parseInt(id);
+      });
+      return context.prisma.todo.updateMany({
+        where: {
+          id: {
+            in: todosToReset,
+          },
+        },
+        data: {
+          isComplete: false,
+        },
+      });
+    },
     deleteTodo: (parent, args, context, info) => {
       return context.prisma.todo.delete({
         where: {
