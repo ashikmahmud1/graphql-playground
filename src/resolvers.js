@@ -115,6 +115,18 @@ const resolvers = {
         },
       });
     },
+    deleteTodos: (parent, args, context, info) => {
+      let newIds = args.todoIds.map((id) => {
+        return parseInt(id);
+      });
+      return context.prisma.todo.deleteMany({
+        where: {
+          id: {
+            in: newIds,
+          },
+        },
+      });
+    },
   },
   User: {
     id: (parent) => parent.id,
