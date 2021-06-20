@@ -19,10 +19,9 @@ const resolvers = {
       return context.prisma.user.findMany();
     },
     user: (parent, args, context, info) => {
-      console.log(args);
-      return users.find((user) => {
-        if (user.id == args.userId) {
-          return user;
+      return context.prisma.user.findUnique({
+        where: {
+          id: parseInt(args.userId)
         }
       });
     },
@@ -105,6 +104,7 @@ const resolvers = {
         data: {
           name: args.name,
           isComplete: args.isComplete,
+          user: {connect: {id: parseInt(args.userId)}},
         },
       });
     },
@@ -169,15 +169,22 @@ const resolvers = {
       // finally return the age
       return parent.age;
     },
-    todos: (parent) => {
-      console.log("parent: ", parent);
-      return todos.filter((elem) => elem.userId == parent.id);
+    todos: (parent, args,context, info) => {
+      return context.prisma.todo.findMany({
+        where: {
+          userId: parent.id
+        }
+      });
     },
   },
   Todo: {
-    // user: (parent) => {
-    //   return users.find((elem) => elem.id == parent.userId);
-    // },
+    user: (parent, args, context, info) => {
+      return context.prisma.user.findUnique({
+        where: {
+          id: parseInt(parent.userId)
+        }
+      })
+    }
   },
 };
 

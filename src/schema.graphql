@@ -9,7 +9,7 @@ type Mutation {
     createUser(firstName: String!, email: String!, age: Int): User!
     deleteUser(userId: ID!): User
     updateUser(userId: ID!,input: UserInput): User
-    createTodo(name: String!, isComplete:Boolean!): Todo!
+    createTodo(name: String!, isComplete:Boolean!,userId: Int!): Todo!
     updateTodo(todoId:ID!, name: String, isComplete:Boolean): Todo
     resetTodos(todoIds: [ID!]!): BatchPayload!
     deleteTodo(todoId: ID!): Todo
@@ -38,4 +38,6 @@ type Todo {
     id: ID!
     name: String!
     isComplete: Boolean!
+    user: User!
+    userId: Int!
 }
