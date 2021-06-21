@@ -1,18 +1,28 @@
-const {GraphQLServer} = require('graphql-yoga');
-const {resolvers} = require("./resolvers");
+// const {GraphQLServer} = require('graphql-yoga');
+const { ApolloServer } = require("apollo-server-express");
+const { resolvers } = require("./resolvers");
 
-const {PrismaClient} = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const typeDefs = require("./typedefs");
 
+const express = require("express");
 
-const server = new GraphQLServer({
-    typeDefs:"./src/schema.graphql",
-    resolvers,
-    context: {
-        prisma,
-    }
-})
+const PORT = 4000;
 
-server.start(() => {
-    console.log("server is running at http://localhost:4000")
-})
+const app = express();
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: {
+    prisma,
+  },
+});
+
+const path = "/graphql";
+server.applyMiddleware({ app, path });
+
+app.listen({ port: PORT }, () => {
+  console.log(`server is running at http://localhost:${PORT}`);
+});
