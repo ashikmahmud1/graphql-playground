@@ -11,7 +11,8 @@ model User{
     id Int @id @default(autoincrement())
     createdAt DateTime @default(now())
     firstName String
-    email String
+    email String @unique
+    password String
     age Int?
     todos Todo[]
 }
