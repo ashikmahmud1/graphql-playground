@@ -6,6 +6,8 @@ const { users } = require("./data/users");
 
 const { todos } = require("./data/todos");
 
+const bcrypt = require("bcryptjs");
+
 const resolvers = {
   Query: {
     helloworld: () => "hello world! what a day!",
@@ -30,12 +32,18 @@ const resolvers = {
     },
   },
   Mutation: {
-    createUser: (parent, args, context, info) => {
+    signup: async (parent, args, context, info) => {
+
+      // bcrypt the password before pushing it to the database.
+      const password = await bcrypt.hash(args.password, 10);
+      console.log(password);
+
       const newUser = context.prisma.user.create({
         data: {
           firstName: args.firstName,
           email: args.email,
           age: args.age,
+          password
         },
       });
 
@@ -56,7 +64,7 @@ const resolvers = {
       //     return newUser;
       // }
     },
-    deleteUser: (parent, args, context, info) => {
+    deleteUser: async (parent, args, context, info) => {
       // let user;
 
       // users.findIndex((elem) => {
@@ -68,6 +76,14 @@ const resolvers = {
       // })
 
       // return user;
+
+      // first delete all the todos by this user
+
+      await context.prisma.todo.deleteMany({
+        where: {
+          userId: parseInt(args.userId)
+        }
+      })
 
       return context.prisma.user.delete({
         where: {
