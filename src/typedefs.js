@@ -11,6 +11,7 @@ module.exports = gql `type Query {
 type Mutation {
     signup(firstName: String!, email: String!,password: String!, age: Int): User!
     login(email: String!, password: String!): User
+    logout: Boolean
     deleteUser(userId: ID!): User
     updateUser(userId: ID!,input: UserInput): User
     createTodo(name: String!, isComplete:Boolean!,userId: Int!): Todo!
