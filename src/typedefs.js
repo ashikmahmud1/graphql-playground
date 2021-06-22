@@ -1,12 +1,17 @@
-type Query {
+const { gql } =  require('apollo-server-express');
+
+module.exports = gql `type Query {
     helloworld: String!,
     users(text: String): [User!]!
     user(userId: ID!): User
     todos: [Todo!]!
+    me: User
 }
 
 type Mutation {
     signup(firstName: String!, email: String!,password: String!, age: Int): User!
+    login(email: String!, password: String!): User
+    logout: Boolean
     deleteUser(userId: ID!): User
     updateUser(userId: ID!,input: UserInput): User
     createTodo(name: String!, isComplete:Boolean!,userId: Int!): Todo!
@@ -40,4 +45,4 @@ type Todo {
     isComplete: Boolean!
     user: User!
     userId: Int!
-}
+}`
