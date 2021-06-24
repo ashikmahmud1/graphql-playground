@@ -59,6 +59,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+const corsOptions = { credentials: true, origin: "http://localhost:3000" };
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -68,7 +70,7 @@ const server = new ApolloServer({
 });
 
 const path = "/graphql";
-server.applyMiddleware({ app, path });
+server.applyMiddleware({ app, path, cors: corsOptions });
 
 app.listen({ port: PORT }, () => {
   console.log(`server is running at http://localhost:${PORT}`);

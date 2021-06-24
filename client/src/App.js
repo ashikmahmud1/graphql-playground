@@ -1,23 +1,39 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import Header from "./components/Header";
+import { Switch, Route } from "react-router-dom";
+import Login from "./screens/Login";
+import Signup from "./screens/Signup";
+import UnauthenticatedApp from "./screens/UnauthenticatedApp";
+import AuthenticatedApp from "./AuthenticatedApp";
+import { useAuth } from "./context/AuthContext";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 function App() {
+  const { currentUser } = useAuth();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Header />
+      {currentUser ? (
+        <AuthenticatedApp />
+      ) : (
+        <Switch>
+          <Route path="/login">
+            <Login />
+          </Route>
+          <Route path="/signup">
+            <Elements stripe={stripePromise}>
+              <Signup />
+            </Elements>
+          </Route>
+          <Route path="/">
+            <UnauthenticatedApp />
+          </Route>
+        </Switch>
+      )}
     </div>
   );
 }
