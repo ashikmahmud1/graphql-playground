@@ -13,10 +13,12 @@
     "@prisma/client": "^2.25.0",
     "apollo-server-express": "^2.25.1",
     "bcryptjs": "^2.4.3",
+    "express": "^4.17.1",
     "express-session": "^1.17.2",
     "graphql-passport": "^0.6.3",
     "graphql-yoga": "^1.18.3",
     "passport": "^0.4.1",
+    "stripe": "^8.156.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

@@ -1,166 +1,154 @@
+const { Stripe } = require("stripe");
+require("dotenv").config();
+const stripe = new Stripe(process.env.SECRET_KEY);
+
 const bcrypt = require("bcryptjs");
+const { AuthenticationError } = require("apollo-server-express");
 
-const Mutation =  {
-    signup: async (parent, args, context, info) => {
+const Mutation = {
+  signup: async (parent, args, context, info) => {
+    const customer = await stripe.customers.create({
+      name: args.firstName,
+      payment_method: args.paymentMethod,
+      invoice_settings: {
+        default_payment_method: args.paymentMethod,
+      },
+    });
 
-      // bcrypt the password before pushing it to the database.
-      const password = await bcrypt.hash(args.password, 10);
+    console.log("stripe customer: ", customer);
 
-      await context.prisma.user.create({
-        data: {
-          firstName: args.firstName,
-          email: args.email,
-          age: args.age,
-          password
-        },
-      });
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: process.env.FANCY_BIZ_TOOL }],
+      default_payment_method: args.paymentMethod,
+    });
 
-      const {user} = await context.authenticate("graphql-local", {
+    if (subscription.status === "incomplete") {
+      console.log("problem!");
+      throw new Error("There was a problem with your card");
+    }
+
+    console.log("made it past subscription!");
+
+    const password = await bcrypt.hash(args.password, 10);
+
+    await context.prisma.user.create({
+      data: {
+        firstName: args.firstName,
         email: args.email,
+        age: args.age,
         password,
-      })
+      },
+    });
 
-      context.login(user);
+    const { user } = await context.authenticate("graphql-local", {
+      email: args.email,
+      password: args.password,
+    });
 
-      return user;
-      // return newUser;
-      // const newUser = {
-      //     id: newUserId(),
-      //     firstName: args.firstName,
-      //     email: args.email,
-      //     age: args.age
-      // }
-      // const userAlreadyExist = users.some((elem) => {
-      //     return elem.email == args.email
-      // })
-      // if(userAlreadyExist){
-      //     throw new Error("User already exists")
-      // } else{
-      //     users.push(newUser);
-      //     return newUser;
-      // }
-    },
-    login: async (parent, {email, password}, context, info) => {
-      console.log("login one");
+    context.login(user);
 
-      const {user} = await context.authenticate("graphql-local", {
-        email,
-        password,
-      })
+    return user;
+  },
+  login: async (parent, { email, password }, context, info) => {
+    console.log("login one");
 
-      console.log("in resolver",user);
-      context.login(user);
+    const { user } = await context.authenticate("graphql-local", {
+      email,
+      password,
+    });
 
-      return user;
-    },
-    logout: (parent, args, context, info) => {
-      context.logout();
-    },
-    deleteUser: async (parent, args, context, info) => {
-      // let user;
+    console.log("in resolver: ", user);
 
-      // users.findIndex((elem) => {
-      //     if(elem.id == args.userId){
-      //         user = elem;
-      //         return true;
-      //     }
-      //     return false; // passes test so stays in array.
-      // })
+    context.login(user);
 
-      // return user;
+    return user;
+  },
+  logout: (parent, args, context, info) => {
+    console.log(context);
+    context.logout();
+  },
+  deleteUser: async (parent, args, context, info) => {
+    await context.prisma.todo.deleteMany({
+      where: { userId: parseInt(args.userId) },
+    });
 
-      // first delete all the todos by this user
+    return context.prisma.user.delete({
+      where: { id: parseInt(args.userId) },
+    });
+  },
+  updateUser: (_, args, context) => {
+    return context.prisma.user.update({
+      where: {
+        id: parseInt(args.userId),
+      },
+      data: {
+        firstName: args.input.firstName,
+        email: args.input.email,
+        age: args.input.age,
+      },
+    });
+  },
+  createTodo: (parent, args, context, info) => {
+    if (!context.isAuthenticated()) {
+      throw new AuthenticationError("Must be logged in to do that");
+    }
 
-      await context.prisma.todo.deleteMany({
-        where: {
-          userId: parseInt(args.userId)
-        }
-      })
+    if (args.name.length <= 0) {
+      throw new Error("Todo must not be blank!");
+    }
 
-      return context.prisma.user.delete({
-        where: {
-          id: parseInt(args.userId),
+    return context.prisma.todo.create({
+      data: {
+        name: args.name,
+        isComplete: args.isComplete,
+        user: { connect: { id: parseInt(args.userId) } },
+      },
+    });
+  },
+  deleteTodo: (parent, args, context, info) => {
+    return context.prisma.todo.delete({
+      where: { id: parseInt(args.todoId) },
+    });
+  },
+  updateTodo: (_, args, context) => {
+    return context.prisma.todo.update({
+      where: {
+        id: parseInt(args.todoId),
+      },
+      data: {
+        name: args.name,
+        isComplete: args.isComplete,
+      },
+    });
+  },
+  resetTodos: (parent, args, context, info) => {
+    let todosToReset = args.todoIds.map((id) => {
+      return parseInt(id);
+    });
+    return context.prisma.todo.updateMany({
+      where: {
+        id: {
+          in: todosToReset,
         },
-      });
-    },
-    updateUser: (parent, args, context, info) => {
-      // const user = users.find((elem) => {
-      //     if(elem.id == args.userId){
-      //         elem.firstName = args.firstName ? args.firstName : elem.firstName;
-      //         elem.email = args.email ? args.email : elem.email;
-      //         elem.age = args.age ? args.age : elem.age;
-      //         return elem;
-      //     }
-      // })
-      // const userIndex = users.findIndex((elem) =>  elem.id == args.userId);
-      // users[userIndex] = {...users[userIndex],...args.input}
-      // return users[userIndex];
+      },
+      data: {
+        isComplete: false,
+      },
+    });
+  },
+  deleteTodos: (parent, args, context, info) => {
+    let newIds = args.todoIds.map((id) => {
+      return parseInt(id);
+    });
+    return context.prisma.todo.deleteMany({
+      where: {
+        id: {
+          in: newIds,
+        },
+      },
+    });
+  },
+};
 
-      return context.prisma.user.update({
-        where: {
-          id: parseInt(args.userId),
-        },
-        data: {
-          firstName: args.input.firstName,
-          email: args.input.email,
-          age: args.input.age,
-        },
-      });
-    },
-    createTodo: (parent, args, context, info) => {
-      return context.prisma.todo.create({
-        data: {
-          name: args.name,
-          isComplete: args.isComplete,
-          user: {connect: {id: parseInt(args.userId)}},
-        },
-      });
-    },
-    updateTodo: (parent, args, context, info) => {
-      return context.prisma.todo.update({
-        where: {
-          id: parseInt(args.todoId),
-        },
-        data: {
-          name: args.name,
-          isComplete: args.isComplete,
-        },
-      });
-    },
-    resetTodos: (parent, args, context, info) => {
-      let todosToReset = args.todoIds.map((id) => {
-        return parseInt(id);
-      });
-      return context.prisma.todo.updateMany({
-        where: {
-          id: {
-            in: todosToReset,
-          },
-        },
-        data: {
-          isComplete: false,
-        },
-      });
-    },
-    deleteTodo: (parent, args, context, info) => {
-      return context.prisma.todo.delete({
-        where: {
-          id: parseInt(args.todoId),
-        },
-      });
-    },
-    deleteTodos: (parent, args, context, info) => {
-      let newIds = args.todoIds.map((id) => {
-        return parseInt(id);
-      });
-      return context.prisma.todo.deleteMany({
-        where: {
-          id: {
-            in: newIds,
-          },
-        },
-      });
-    },
-  }
-
-  module.exports = {Mutation};
+module.exports = { Mutation };

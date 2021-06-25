@@ -1,11 +1,9 @@
-const Todo =  {
-    user: (parent, args, context, info) => {
-      return context.prisma.user.findUnique({
-        where: {
-          id: parseInt(parent.userId)
-        }
-      })
-    }
-  }
+const Todo = {
+  user: (parent, _, context) => {
+    return context.prisma.user.findOne({
+      where: { id: parent.userId },
+    });
+  },
+};
 
-  module.exports = {Todo};
+module.exports = { Todo };
